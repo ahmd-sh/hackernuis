@@ -1,5 +1,5 @@
 {
-  "name": "hacker-news-tui",
+  "name": "hackernuis",
   "module": "src/index.tsx",
   "type": "module",
   "private": true,
@@ -15,6 +15,7 @@
   "dependencies": {
     "@opentui/core": "^0.1.103",
     "@opentui/react": "^0.1.103",
+    "opentui-spinner": "^0.0.6",
     "react": "^19.2.4"
   }
 }
