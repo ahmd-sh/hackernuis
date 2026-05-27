@@ -6,10 +6,11 @@ import { useTheme } from "../theme"
 interface Props {
   category: Category
   onSelect: (c: Category) => void
+  onHome: () => void
   showTabs?: boolean
 }
 
-export function Header({ category, onSelect, showTabs = true }: Props) {
+export function Header({ category, onSelect, onHome, showTabs = true }: Props) {
   const t = useTheme()
   return (
     <box
@@ -25,7 +26,12 @@ export function Header({ category, onSelect, showTabs = true }: Props) {
       borderColor={t.border}
     >
       <box flexDirection="row" flexShrink={0} height={1} alignItems="center" gap={2}>
-        <text bg={t.brandTileBg} fg={t.brandTileFg} attributes={TextAttributes.BOLD}>
+        <text
+          bg={t.brandTileBg}
+          fg={t.brandTileFg}
+          attributes={TextAttributes.BOLD}
+          onMouseDown={onHome}
+        >
           {" Y "}
         </text>
         <text fg={t.brandText} attributes={TextAttributes.BOLD}>

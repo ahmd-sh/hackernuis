@@ -199,7 +199,15 @@ export function App() {
   return (
     <ThemeContext.Provider value={theme}>
     <box flexDirection="column" flexGrow={1}>
-      <Header category={category} onSelect={switchCategory} showTabs={view.kind === "list"} />
+      <Header
+        category={category}
+        onSelect={switchCategory}
+        onHome={() => {
+          setView({ kind: "list" })
+          switchCategory("top")
+        }}
+        showTabs={view.kind === "list"}
+      />
       <box flexGrow={1} flexDirection="column" backgroundColor={theme.body}>
         {view.kind === "list" ? (
           <StoryListView
