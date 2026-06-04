@@ -1,27 +1,20 @@
-# hackernuis
+# Hackernuis
 
-A Hacker News browser that lives in your terminal. Built with [OpenTUI](https://github.com/anomalyco/opentui), React, and [Bun](https://bun.sh).
+Hacker News in your terminal!
 
 ```
 bun add -g @ahmd-sh/hackernuis
 hackernuis
 ```
 
-That's it. The front page loads, you scroll with `j`/`k`, hit `Enter` to read comments, and `q` to quit.
-
-## Why
-
-I wanted a clean way to read HN without context-switching to a browser. The web client is fine but heavy, and most terminal clients I tried felt clunky. This one aims for "good enough that you stop reaching for the browser." Threaded comments, link popups, save-for-later, and a light theme that actually looks like HN.
-
 ## What it does
 
 - Browse all six HN feeds: Top, New, Best, Ask, Show, and Jobs.
-- Drill into any story to read its comment tree. Collapse subtrees you're not interested in.
-- Pop up the list of links inside any comment so you can pick one and open it in your browser.
-- Save posts to a persistent list at `~/.config/hackernuis/saved.json`. Press `s` to toggle, `Shift-S` to jump to the saved view.
-- Switch between a dark theme and a light theme that matches HN's own palette. Press `t`.
-- Use vim keys, arrow keys, or your mouse. They all work at the same time.
-- Right-click on a story row for a context menu (save, open URL, open comments).
+- Navigate through a post's comments.
+- Save posts for later.
+- Vim + mouse support.
+- Themes.
+- ... and a really cool Knight Rider scanner animation for loaders (⁠◕⁠ᴗ⁠◕⁠ )
 
 ## Requirements
 
@@ -31,7 +24,7 @@ You need [Bun](https://bun.sh) 1.2 or newer. Install it with:
 curl -fsSL https://bun.sh/install | bash
 ```
 
-Any modern terminal with truecolor, mouse support, and UTF-8 will work. I've tested it in iTerm2, WezTerm, Kitty, Ghostty, Alacritty, and macOS Terminal.app. It should work on Linux too. Windows is technically supported by OpenTUI but I haven't tried it.
+Any modern terminal with truecolor, mouse support, and UTF-8 will work. I've tested it in Ghostty on MacOS. Linux/Windows is supported by OpenTUI but I haven't tried it (yet).
 
 ## Install
 
@@ -145,22 +138,7 @@ bun install
 bun dev    # hot reload
 ```
 
-Code layout:
-
-```
-src/
-├── index.tsx              # entry: renderer + <App />
-├── App.tsx                # state machine and keyboard dispatch
-├── theme.ts               # theme context with dark and light palettes
-├── spinner.ts             # vendored Knight Rider scanner utils
-├── api/                   # HN Firebase client and types
-├── hooks/                 # useStoryIds, useItems, useCommentTree, useSaved
-├── components/            # Header, StatusBar, StoryRow, CommentNode, Loader, LinksPopup, ContextMenu
-├── views/                 # StoryListView, StoryDetailView
-└── utils/                 # format, openUrl, savedStore
-```
-
-Data comes from the public [Hacker News Firebase API](https://github.com/HackerNews/API). No auth, no rate limits to worry about.
+Data comes from the public [Hacker News Firebase API](https://github.com/HackerNews/API).
 
 ## Releases
 
