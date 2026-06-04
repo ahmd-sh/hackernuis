@@ -1,29 +1,37 @@
 # hackernuis
 
-> A beautiful Hacker News browser for the terminal — built on [OpenTUI](https://github.com/anomalyco/opentui) + React + [Bun](https://bun.sh).
-
-Browse the front page, drill into stories, read full collapsible comment threads, and open links — without leaving the terminal.
+A Hacker News browser that lives in your terminal. Built with [OpenTUI](https://github.com/anomalyco/opentui), React, and [Bun](https://bun.sh).
 
 ```
 bun add -g @ahmd-sh/hackernuis
 hackernuis
 ```
 
-## Features
+That's it. The front page loads, you scroll with `j`/`k`, hit `Enter` to read comments, and `q` to quit.
 
-- **Six feeds**: Top, New, Best, Ask, Show, Jobs — switch with one keystroke or click
-- **Threaded comments**: full nested tree, collapse/expand subtrees, depth-colored indentation
-- **Link extraction**: pop up all links in a comment, navigate, open in browser
-- **Vim, arrow, and mouse navigation** — all work simultaneously
-- **Dark / light themes** — light theme faithful to HN's classic palette
-- **Knight Rider loading scanner** in HN orange
-- **Fast**: in-memory cache, concurrent comment fetching, near-instant tab switches
+## Why
+
+I wanted a clean way to read HN without context-switching to a browser. The web client is fine but heavy, and most terminal clients I tried felt clunky. This one aims for "good enough that you stop reaching for the browser." Threaded comments, link popups, save-for-later, and a light theme that actually looks like HN.
+
+## What it does
+
+- Browse all six HN feeds: Top, New, Best, Ask, Show, and Jobs.
+- Drill into any story to read its comment tree. Collapse subtrees you're not interested in.
+- Pop up the list of links inside any comment so you can pick one and open it in your browser.
+- Save posts to a persistent list at `~/.config/hackernuis/saved.json`. Press `s` to toggle, `Shift-S` to jump to the saved view.
+- Switch between a dark theme and a light theme that matches HN's own palette. Press `t`.
+- Use vim keys, arrow keys, or your mouse. They all work at the same time.
+- Right-click on a story row for a context menu (save, open URL, open comments).
 
 ## Requirements
 
-- **[Bun](https://bun.sh) ≥ 1.2** — `curl -fsSL https://bun.sh/install | bash`
-- A modern terminal with truecolor, mouse, and UTF-8 support (iTerm2, WezTerm, Kitty, Ghostty, Alacritty, Terminal.app — all good)
-- macOS / Linux. Windows is supported by OpenTUI but untested.
+You need [Bun](https://bun.sh) 1.2 or newer. Install it with:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+Any modern terminal with truecolor, mouse support, and UTF-8 will work. I've tested it in iTerm2, WezTerm, Kitty, Ghostty, Alacritty, and macOS Terminal.app. It should work on Linux too. Windows is technically supported by OpenTUI but I haven't tried it.
 
 ## Install
 
@@ -31,7 +39,7 @@ hackernuis
 bun add -g @ahmd-sh/hackernuis
 ```
 
-Or run without installing:
+Or run it once without installing:
 
 ```bash
 bunx @ahmd-sh/hackernuis
@@ -43,7 +51,7 @@ bunx @ahmd-sh/hackernuis
 hackernuis
 ```
 
-Quit with `q` (or `Ctrl-C`).
+Press `q` (or `Ctrl-C`) to quit.
 
 ## Keybindings
 
@@ -51,29 +59,32 @@ Quit with `q` (or `Ctrl-C`).
 
 | Key | Action |
 |---|---|
-| `j` / `↓` · `k` / `↑` | Move cursor |
-| `gg` · `G` | First / last |
-| `Ctrl-D` · `Ctrl-U` · `PgDown` · `PgUp` | Half-page |
-| `c` · `Enter` | Open story (read comments) |
-| `h` / `←` · `l` / `→` | Previous / next tab |
-| `Tab` · `Shift-Tab` | Cycle tabs |
-| `1` – `6` | Jump to category |
-| `o` | Open story URL in browser |
-| `r` | Refresh feed |
+| `j` / `↓`, `k` / `↑` | Move cursor |
+| `gg`, `Shift-G` | Jump to first or last |
+| `Ctrl-D`, `Ctrl-U`, `PgDown`, `PgUp` | Scroll a half page |
+| `c`, `Enter` | Open the story and read its comments |
+| `h` / `←`, `l` / `→` | Previous or next tab |
+| `Tab`, `Shift-Tab` | Cycle through tabs |
+| `1` through `6` | Jump to a specific category |
+| `Shift-S` | Jump to the Saved list |
+| `s` | Save or unsave the highlighted post |
+| `o` | Open the story's URL in your browser |
+| `r` | Refresh the current feed |
 | `t` | Toggle theme |
-| `q` · `Ctrl-C` | Quit |
+| `q`, `Ctrl-C` | Quit |
 
 ### Story detail (comments)
 
 | Key | Action |
 |---|---|
-| `j` / `↓` · `k` / `↑` | Move comment cursor |
-| `gg` · `G` | First / last |
-| `Ctrl-D` · `Ctrl-U` · `PgDown` · `PgUp` | Half-page |
-| `Space` | Collapse / expand subtree |
-| `Enter` | Open links popup (if comment has any) |
-| `o` | Open story URL |
-| `Esc` · `Backspace` · `h` / `←` | Back to list |
+| `j` / `↓`, `k` / `↑` | Move the comment cursor |
+| `gg`, `Shift-G` | Jump to first or last comment |
+| `Ctrl-D`, `Ctrl-U`, `PgDown`, `PgUp` | Scroll a half page |
+| `Space` | Collapse or expand the current subtree |
+| `Enter` | Open the links popup for the current comment |
+| `s` | Save or unsave this story |
+| `o` | Open the story's URL |
+| `Esc`, `Backspace`, `h` / `←` | Back to the list |
 | `t` | Toggle theme |
 | `q` | Quit |
 
@@ -81,35 +92,49 @@ Quit with `q` (or `Ctrl-C`).
 
 | Key | Action |
 |---|---|
-| `j` · `k` · `↑` · `↓` | Move |
-| `gg` · `G` | First / last |
-| `o` · `Enter` | Open link |
-| `Esc` · `Backspace` | Close |
+| `j`, `k`, `↑`, `↓` | Move |
+| `gg`, `Shift-G` | First or last link |
+| `o`, `Enter` | Open the highlighted link |
+| `Esc`, `Backspace` | Close the popup |
+
+### Context menu (right-click)
+
+| Key | Action |
+|---|---|
+| `j` / `↓`, `k` / `↑` | Move |
+| `Enter` | Activate |
+| `Esc`, `Backspace` | Close |
 
 ### Mouse
 
-- Click a **tab** to switch feeds
-- Click the **`Y` tile** to jump home (Top tab)
-- Click a **story row** to select; click the selected row again to open
-- Click a **comment header** to toggle collapse
-- **Double-click** a comment body to open its links popup
-- Click the **story URL** in detail header to open in browser
-- Click outside the **links popup** to close it
-- **Scroll wheel** to scroll lists and comments
+Most things you can do with the keyboard, you can do with a mouse too.
 
-### Selecting & copying text
+- Click a tab to switch feeds.
+- Click the `Y` tile to refresh the current feed (or to exit a story back to its list).
+- Click any story row to select it. Click it again to open the comments.
+- Right-click a story to open a context menu with Save, Open URL, and Open Comments.
+- Click a comment's header line to collapse or expand its subtree.
+- Double-click a comment's body to open its links popup.
+- Click the story URL in the detail header to open it in your browser.
+- Click outside a popup or context menu to dismiss it.
+- Use your scroll wheel to scroll lists and comment trees.
 
-Mouse mode captures clicks, so terminal selection is blocked by default. Bypass it:
+### Selecting and copying text
 
-- **macOS** (Terminal.app, iTerm2, WezTerm, Ghostty): hold **⌥ Option** while click-dragging, then `⌘C`
-- **Linux** (Kitty, Alacritty, WezTerm, GNOME Terminal): hold **Shift** while click-dragging, then `Ctrl-Shift-C`
+Because the app captures mouse events, your terminal's normal click-and-drag selection is intercepted. To select text the regular way:
+
+- On macOS (Terminal.app, iTerm2, WezTerm, Ghostty), hold `Option` while you drag, then `Cmd-C`.
+- On Linux (Kitty, Alacritty, WezTerm, GNOME Terminal), hold `Shift` while you drag, then `Ctrl-Shift-C`.
 
 ## Themes
 
-Press `t` to toggle. Two themes ship:
+Press `t` to toggle. The dark theme is mostly black with orange accents. The light theme is faithful to news.ycombinator.com: white background, orange topbar, the familiar beige row highlight, and HN's classic grey byline text.
 
-- **Dark** (default) — black background, orange accents, white text
-- **Light** — true to HN.com: white background, orange topbar, `#f6f6ef` highlights, classic byline greys
+## Saved posts
+
+Press `s` on any story to save it. Saved posts get a small star next to the title and show up in the Saved tab on the right side of the tab strip. The list persists across sessions in `~/.config/hackernuis/saved.json` as a small JSON file. Press `s` again to remove a post from the list.
+
+`Shift-S` jumps straight to the Saved list from anywhere.
 
 ## Development
 
@@ -120,29 +145,40 @@ bun install
 bun dev    # hot reload
 ```
 
-Tree:
+Code layout:
 
 ```
 src/
 ├── index.tsx              # entry: renderer + <App />
-├── App.tsx                # state machine + keyboard dispatch
-├── theme.ts               # Theme context + dark/light palettes
-├── spinner.ts             # vendored Knight Rider utils
-├── api/                   # HN Firebase client + types
-├── hooks/                 # useStoryIds, useItems, useCommentTree
-├── components/            # Header, StatusBar, StoryRow, CommentNode, Loader, LinksPopup
+├── App.tsx                # state machine and keyboard dispatch
+├── theme.ts               # theme context with dark and light palettes
+├── spinner.ts             # vendored Knight Rider scanner utils
+├── api/                   # HN Firebase client and types
+├── hooks/                 # useStoryIds, useItems, useCommentTree, useSaved
+├── components/            # Header, StatusBar, StoryRow, CommentNode, Loader, LinksPopup, ContextMenu
 ├── views/                 # StoryListView, StoryDetailView
-└── utils/                 # format, openUrl
+└── utils/                 # format, openUrl, savedStore
 ```
 
-Data source: [Hacker News Firebase API](https://github.com/HackerNews/API).
+Data comes from the public [Hacker News Firebase API](https://github.com/HackerNews/API). No auth, no rate limits to worry about.
+
+## Releases
+
+This package publishes to npm via GitHub Actions using OIDC trusted publishing. Every release has a [SLSA provenance attestation](https://slsa.dev/) linking the tarball back to the exact commit and workflow run that produced it. To release a new version:
+
+```bash
+npm version patch   # or minor / major
+git push --follow-tags
+```
+
+The `v*` tag triggers `.github/workflows/publish.yml` which runs `npm publish --provenance --access public`.
 
 ## Acknowledgments
 
-- **[OpenTUI](https://github.com/anomalyco/opentui)** by Anomaly — the native TUI core powering this
-- **[opentui-spinner](https://github.com/msmps/opentui-spinner)** by Matt Simpson — the Knight Rider scanner code is adapted from `examples/knight-rider/utils.ts` (MIT)
-- **[Hacker News](https://news.ycombinator.com)** — for the content and the API
+- [OpenTUI](https://github.com/anomalyco/opentui) by Anomaly. The native TUI core that makes all of this possible.
+- [opentui-spinner](https://github.com/msmps/opentui-spinner) by Matt Simpson. The Knight Rider loading scanner is adapted from `examples/knight-rider/utils.ts` (MIT).
+- [Hacker News](https://news.ycombinator.com) for the content and the open API.
 
 ## License
 
-[MIT](./LICENSE) © Ahmed Shaikh
+[MIT](./LICENSE), Copyright (c) 2026 Ahmed Shaikh.
