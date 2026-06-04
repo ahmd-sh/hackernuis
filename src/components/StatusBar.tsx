@@ -11,8 +11,8 @@ export function StatusBar({ view, loading, message }: Props) {
   const t = useTheme()
   const hints =
     view === "list"
-      ? "c/⏎ open · o link · r refresh · t theme · q quit"
-      : "space collapse · o post link · ⏎ comment link(s) · h/esc back"
+      ? "c/⏎ open · o link · s save/unsave · r refresh · t theme · q quit"
+      : "space collapse · o post link · ⏎ comment link(s) · s save/unsave · h/esc back"
   return (
     <box
       flexDirection="row"

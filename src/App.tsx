@@ -8,11 +8,13 @@ import { StoryDetailView } from "./views/StoryDetailView"
 import { useStoryIds } from "./hooks/useStoryIds"
 import { useItems } from "./hooks/useItems"
 import { flattenTree, useCommentTree } from "./hooks/useCommentTree"
-import { CATEGORIES } from "./api/types"
-import type { Category, Item } from "./api/types"
+import { useSaved } from "./hooks/useSaved"
+import { ALL_CATEGORIES, FEED_CATEGORIES } from "./api/types"
+import type { Category, FeedCategory, Item } from "./api/types"
 import { openUrl } from "./utils/openUrl"
 import { extractLinks, type Link } from "./utils/format"
 import { LinksPopup } from "./components/LinksPopup"
+import { ContextMenu, type MenuItem } from "./components/ContextMenu"
 import { ThemeContext, darkTheme, lightTheme } from "./theme"
 
 const PAGE_SIZE = 30
@@ -23,9 +25,24 @@ export function App() {
   const renderer = useRenderer()
   const [category, setCategory] = useState<Category>("top")
   const [refreshKey, setRefreshKey] = useState(0)
-  const { ids, loading: idsLoading } = useStoryIds(category, refreshKey)
+  const feedCategory: FeedCategory = category === "saved" ? "top" : category
+  const { ids, loading: idsLoading } = useStoryIds(feedCategory, refreshKey)
   const visibleIds = useMemo(() => ids.slice(0, PAGE_SIZE), [ids])
-  const { items, loading: itemsLoading } = useItems(visibleIds)
+  const { items: feedItems, loading: feedItemsLoading } = useItems(visibleIds)
+  const { entries: savedEntries, idSet: savedIds, isSaved, toggle: toggleSave } = useSaved()
+
+  const savedIdList = useMemo(() => savedEntries.map((e) => e.id), [savedEntries])
+  const { items: savedItemsRaw, loading: savedLoading } = useItems(
+    category === "saved" ? savedIdList : [],
+  )
+  const savedItems = useMemo(() => {
+    if (category !== "saved") return [] as Item[]
+    const byId = new Map(savedItemsRaw.map((i) => [i.id, i]))
+    return savedIdList.map((id) => byId.get(id)).filter((x): x is Item => Boolean(x))
+  }, [category, savedItemsRaw, savedIdList])
+
+  const items = category === "saved" ? savedItems : feedItems
+  const listLoading = category === "saved" ? savedLoading : idsLoading || feedItemsLoading
 
   const [view, setView] = useState<View>({ kind: "list" })
   const [listCursor, setListCursor] = useState(0)
@@ -33,6 +50,9 @@ export function App() {
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
   const [theme, setTheme] = useState(darkTheme)
   const [popup, setPopup] = useState<{ links: Link[]; cursor: number } | null>(null)
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[]; cursor: number } | null>(
+    null,
+  )
   const lastG = useRef<number>(0)
   const listScrollRef = useRef<ScrollBoxRenderable | null>(null)
   const detailScrollRef = useRef<ScrollBoxRenderable | null>(null)
@@ -50,11 +70,25 @@ export function App() {
   }, [flat.length])
 
   useEffect(() => {
-    if (popup) {
+    if (popup || menu) {
       detailScrollRef.current?.blur()
       listScrollRef.current?.blur()
     }
-  }, [popup])
+  }, [popup, menu])
+
+  const openMenuForStory = (item: Item, x: number, y: number) => {
+    const items: MenuItem[] = [
+      {
+        label: isSaved(item.id) ? "★ Unsave" : "☆ Save",
+        action: () => toggleSave(item.id),
+      },
+    ]
+    if (item.url) {
+      items.push({ label: "Open URL in browser", action: () => openUrl(item.url!) })
+    }
+    items.push({ label: "Open comments", action: () => enterDetail(item) })
+    setMenu({ x, y, items, cursor: 0 })
+  }
 
   const switchCategory = (c: Category) => {
     setCategory(c)
@@ -62,9 +96,9 @@ export function App() {
   }
 
   const cycleCategory = (dir: 1 | -1) => {
-    const idx = CATEGORIES.findIndex((c) => c.key === category)
-    const next = CATEGORIES[(idx + dir + CATEGORIES.length) % CATEGORIES.length]!
-    switchCategory(next.key)
+    const idx = ALL_CATEGORIES.indexOf(category)
+    const next = ALL_CATEGORIES[(idx + dir + ALL_CATEGORIES.length) % ALL_CATEGORIES.length]!
+    switchCategory(next)
   }
 
   const enterDetail = (item: Item) => {
@@ -104,16 +138,32 @@ export function App() {
       process.exit(0)
     }
 
+    if (menu) {
+      const max = menu.items.length - 1
+      if (name === "j" || name === "down") {
+        setMenu((m) => (m ? { ...m, cursor: Math.min(max, m.cursor + 1) } : m))
+      } else if (name === "k" || name === "up") {
+        setMenu((m) => (m ? { ...m, cursor: Math.max(0, m.cursor - 1) } : m))
+      } else if (name === "return" || name === "enter") {
+        const item = menu.items[menu.cursor]
+        if (item && !item.disabled) item.action()
+        setMenu(null)
+      } else if (name === "escape" || name === "backspace") {
+        setMenu(null)
+      }
+      return
+    }
+
     if (popup) {
       const max = popup.links.length - 1
       if (name === "j" || name === "down") {
         setPopup((p) => (p ? { ...p, cursor: Math.min(max, p.cursor + 1) } : p))
       } else if (name === "k" || name === "up") {
         setPopup((p) => (p ? { ...p, cursor: Math.max(0, p.cursor - 1) } : p))
+      } else if (name === "g" && ev.shift) {
+        setPopup((p) => (p ? { ...p, cursor: max } : p))
       } else if (name === "g") {
         setPopup((p) => (p ? { ...p, cursor: 0 } : p))
-      } else if (name === "G") {
-        setPopup((p) => (p ? { ...p, cursor: max } : p))
       } else if (name === "o" || name === "return" || name === "enter") {
         const link = popup.links[popup.cursor]
         if (link) openUrl(link.url)
@@ -128,6 +178,13 @@ export function App() {
       return
     }
 
+    // Capital S enters saved view from anywhere
+    if (name === "s" && ev.shift) {
+      setView({ kind: "list" })
+      switchCategory("saved")
+      return
+    }
+
     if (view.kind === "list") {
       const max = items.length - 1
       const pg = pageSize("list")
@@ -135,12 +192,12 @@ export function App() {
         setListCursor((c) => Math.min(max, c + 1))
       } else if (name === "k" || name === "up") {
         setListCursor((c) => Math.max(0, c - 1))
+      } else if (name === "g" && ev.shift) {
+        setListCursor(max)
       } else if (name === "g") {
         const now = Date.now()
         if (now - lastG.current < 500) setListCursor(0)
         lastG.current = now
-      } else if (name === "G") {
-        setListCursor(max)
       } else if ((ev.ctrl && name === "d") || name === "pagedown") {
         setListCursor((c) => Math.min(max, c + pg))
       } else if ((ev.ctrl && name === "u") || name === "pageup") {
@@ -157,10 +214,13 @@ export function App() {
       } else if (name === "o") {
         const cur = items[listCursor]
         if (cur?.url) openUrl(cur.url)
+      } else if (name === "s") {
+        const cur = items[listCursor]
+        if (cur) toggleSave(cur.id)
       } else if (/^[1-6]$/.test(name)) {
-        const c = CATEGORIES[parseInt(name, 10) - 1]
+        const c = FEED_CATEGORIES[parseInt(name, 10) - 1]
         if (c) switchCategory(c.key)
-      } else if (name === "r") {
+      } else if (name === "r" && category !== "saved") {
         setRefreshKey((k) => k + 1)
       }
     } else {
@@ -170,12 +230,12 @@ export function App() {
         setDetailCursor((c) => Math.min(max, c + 1))
       } else if (name === "k" || name === "up") {
         setDetailCursor((c) => Math.max(0, c - 1))
+      } else if (name === "g" && ev.shift) {
+        setDetailCursor(max)
       } else if (name === "g") {
         const now = Date.now()
         if (now - lastG.current < 500) setDetailCursor(0)
         lastG.current = now
-      } else if (name === "G") {
-        setDetailCursor(max)
       } else if ((ev.ctrl && name === "d") || name === "pagedown") {
         setDetailCursor((c) => Math.min(max, c + pg))
       } else if ((ev.ctrl && name === "u") || name === "pageup") {
@@ -188,69 +248,101 @@ export function App() {
         if (cur) openLinksFor(cur.node.item.id)
       } else if (name === "o") {
         if (view.story.url) openUrl(view.story.url)
+      } else if (name === "s") {
+        toggleSave(view.story.id)
       } else if (name === "h" || name === "left" || name === "backspace" || name === "escape") {
         exitDetail()
       }
     }
   })
 
-  const loading = view.kind === "list" ? idsLoading || itemsLoading : commentsLoading
+  const detailLoading = commentsLoading
+  const statusLoading = view.kind === "list" ? listLoading : detailLoading
 
   return (
     <ThemeContext.Provider value={theme}>
-    <box flexDirection="column" flexGrow={1}>
-      <Header
-        category={category}
-        onSelect={switchCategory}
-        onHome={() => {
-          setView({ kind: "list" })
-          switchCategory("top")
-        }}
-        showTabs={view.kind === "list"}
-      />
-      <box flexGrow={1} flexDirection="column" backgroundColor={theme.body}>
-        {view.kind === "list" ? (
-          <StoryListView
-            key={category}
-            ref={listScrollRef}
-            items={items}
-            cursor={listCursor}
-            loading={loading}
-            onSelect={setListCursor}
-            onActivate={(idx) => {
-              const cur = items[idx]
-              if (cur) enterDetail(cur)
-            }}
-          />
-        ) : (
-          <StoryDetailView
-            key={view.story.id}
-            ref={detailScrollRef}
-            story={view.story}
-            flat={flat}
-            cursor={detailCursor}
-            collapsed={collapsed}
-            loading={loading}
-            onSelectComment={setDetailCursor}
-            onToggleComment={toggleCollapse}
-            onOpenLinks={openLinksFor}
-          />
-        )}
-      </box>
-      <StatusBar view={view.kind} loading={loading} />
-      {popup ? (
-        <LinksPopup
-          links={popup.links}
-          cursor={popup.cursor}
-          onSelect={(idx) => setPopup((p) => (p ? { ...p, cursor: idx } : p))}
-          onActivate={(idx) => {
-            const link = popup.links[idx]
-            if (link) openUrl(link.url)
+      <box flexDirection="column" flexGrow={1}>
+        <Header
+          category={category}
+          onSelect={switchCategory}
+          onHome={() => {
+            if (view.kind === "detail") {
+              exitDetail()
+            } else if (category === "saved") {
+              // saved view: re-derive items by re-running useItems via cursor reset
+              setListCursor(0)
+            } else {
+              setRefreshKey((k) => k + 1)
+            }
           }}
-          onClose={() => setPopup(null)}
+          showTabs={view.kind === "list"}
         />
-      ) : null}
-    </box>
+        <box flexGrow={1} flexDirection="column" backgroundColor={theme.body}>
+          {view.kind === "list" ? (
+            <StoryListView
+              key={category}
+              ref={listScrollRef}
+              items={items}
+              cursor={listCursor}
+              loading={listLoading}
+              savedIds={savedIds}
+              emptyMessage={category === "saved" ? "No saved posts yet. Press 's' on a story." : "No stories"}
+              loadingMessage={category === "saved" ? "Loading saved posts…" : "Loading stories…"}
+              onSelect={setListCursor}
+              onActivate={(idx) => {
+                const cur = items[idx]
+                if (cur) enterDetail(cur)
+              }}
+              onContextMenu={(idx, ev) => {
+                const cur = items[idx]
+                if (cur) openMenuForStory(cur, ev.x, ev.y)
+              }}
+            />
+          ) : (
+            <StoryDetailView
+              key={view.story.id}
+              ref={detailScrollRef}
+              story={view.story}
+              flat={flat}
+              cursor={detailCursor}
+              collapsed={collapsed}
+              loading={detailLoading}
+              saved={isSaved(view.story.id)}
+              onSelectComment={setDetailCursor}
+              onToggleComment={toggleCollapse}
+              onOpenLinks={openLinksFor}
+            />
+          )}
+        </box>
+        <StatusBar view={view.kind} loading={statusLoading} />
+        {menu ? (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={menu.items}
+            cursor={menu.cursor}
+            onSelect={(idx) => setMenu((m) => (m ? { ...m, cursor: idx } : m))}
+            onActivate={(idx) => {
+              const item = menu.items[idx]
+              if (item && !item.disabled) item.action()
+              setMenu(null)
+            }}
+            onClose={() => setMenu(null)}
+          />
+        ) : null}
+        {popup ? (
+          <LinksPopup
+            links={popup.links}
+            cursor={popup.cursor}
+            onSelect={(idx) => setPopup((p) => (p ? { ...p, cursor: idx } : p))}
+            onActivate={(idx) => {
+              const link = popup.links[idx]
+              if (link) openUrl(link.url)
+            }}
+            onClose={() => setPopup(null)}
+          />
+        ) : null}
+      </box>
     </ThemeContext.Provider>
   )
 }

@@ -1,6 +1,7 @@
-export type Category = "top" | "new" | "best" | "ask" | "show" | "job"
+export type FeedCategory = "top" | "new" | "best" | "ask" | "show" | "job"
+export type Category = FeedCategory | "saved"
 
-export const CATEGORIES: { key: Category; label: string }[] = [
+export const FEED_CATEGORIES: { key: FeedCategory; label: string }[] = [
   { key: "top", label: "Top" },
   { key: "new", label: "New" },
   { key: "best", label: "Best" },
@@ -8,6 +9,14 @@ export const CATEGORIES: { key: Category; label: string }[] = [
   { key: "show", label: "Show" },
   { key: "job", label: "Jobs" },
 ]
+
+export const ALL_CATEGORIES: Category[] = [
+  ...FEED_CATEGORIES.map((c) => c.key),
+  "saved",
+]
+
+// Backwards-compat alias used in older imports
+export const CATEGORIES = FEED_CATEGORIES
 
 export interface Item {
   id: number

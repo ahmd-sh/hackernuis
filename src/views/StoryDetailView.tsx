@@ -15,13 +15,14 @@ interface Props {
   cursor: number
   collapsed: Set<number>
   loading: boolean
+  saved?: boolean
   onSelectComment: (idx: number) => void
   onToggleComment: (id: number) => void
   onOpenLinks: (id: number) => void
 }
 
 export const StoryDetailView = forwardRef<ScrollBoxRenderable, Props>(function StoryDetailView(
-  { story, flat, cursor, collapsed, loading, onSelectComment, onToggleComment, onOpenLinks },
+  { story, flat, cursor, collapsed, loading, saved, onSelectComment, onToggleComment, onOpenLinks },
   ref,
 ) {
   const t = useTheme()
@@ -51,6 +52,7 @@ export const StoryDetailView = forwardRef<ScrollBoxRenderable, Props>(function S
         borderColor={t.border}
       >
         <text fg={t.text} attributes={TextAttributes.BOLD} wrapMode="word">
+          {saved ? "★ " : ""}
           {story.title ?? "(untitled)"}
         </text>
         <text>

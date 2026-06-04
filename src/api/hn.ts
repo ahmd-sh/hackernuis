@@ -1,10 +1,10 @@
-import type { Category, Item } from "./types"
+import type { FeedCategory, Item } from "./types"
 
 const BASE = "https://hacker-news.firebaseio.com/v0"
 const cache = new Map<number, Item>()
 const inflight = new Map<number, Promise<Item>>()
 
-export async function fetchIds(category: Category): Promise<number[]> {
+export async function fetchIds(category: FeedCategory): Promise<number[]> {
   const res = await fetch(`${BASE}/${category}stories.json`)
   if (!res.ok) throw new Error(`HN ${category} ${res.status}`)
   const ids = (await res.json()) as number[] | null

@@ -29,6 +29,7 @@ export interface Theme {
   link: ColorInput
 
   rowHighlight: ColorInput
+  menuBg: ColorInput
 
   scrollTrack: ColorInput
   scrollThumb: ColorInput
@@ -63,6 +64,7 @@ export const darkTheme: Theme = {
   link: "#4488ff",
 
   rowHighlight: "#ffffff1a",
+  menuBg: "#1a1a1a",
 
   scrollTrack: "#1a1a1a",
   scrollThumb: "#555555",
@@ -97,6 +99,7 @@ export const lightTheme: Theme = {
   link: "#4488ff",
 
   rowHighlight: "#f6f6ef",
+  menuBg: "#f6f6ef",
 
   scrollTrack: "#ffffff",
   scrollThumb: "#828282",

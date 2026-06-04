@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { fetchIds } from "../api/hn"
-import type { Category } from "../api/types"
+import type { FeedCategory } from "../api/types"
 
-export function useStoryIds(category: Category, refreshKey = 0) {
+export function useStoryIds(category: FeedCategory, refreshKey = 0) {
   const [ids, setIds] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

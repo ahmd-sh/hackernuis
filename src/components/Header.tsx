@@ -1,6 +1,6 @@
 import { TextAttributes } from "@opentui/core"
 import type { Category } from "../api/types"
-import { CATEGORIES } from "../api/types"
+import { FEED_CATEGORIES } from "../api/types"
 import { useTheme } from "../theme"
 
 interface Props {
@@ -41,7 +41,7 @@ export function Header({ category, onSelect, onHome, showTabs = true }: Props) {
       </box>
       {showTabs ? (
         <box flexDirection="row" flexShrink={0} height={1} marginTop={1} gap={1}>
-          {CATEGORIES.map((c, i) => {
+          {FEED_CATEGORIES.map((c, i) => {
             const active = c.key === category
             return (
               <box
@@ -56,6 +56,16 @@ export function Header({ category, onSelect, onHome, showTabs = true }: Props) {
               </box>
             )
           })}
+          <box flexGrow={1} />
+          <box
+            flexShrink={0}
+            onMouseDown={() => onSelect("saved")}
+            backgroundColor={category === "saved" ? t.tabActiveBg : undefined}
+          >
+            <text fg={category === "saved" ? t.tabActiveFg : t.tabInactiveFg}>
+              {" [S]aved "}
+            </text>
+          </box>
         </box>
       ) : null}
     </box>

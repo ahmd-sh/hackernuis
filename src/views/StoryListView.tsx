@@ -1,5 +1,5 @@
 import { forwardRef, useEffect } from "react"
-import type { ScrollBoxRenderable } from "@opentui/core"
+import type { MouseEvent, ScrollBoxRenderable } from "@opentui/core"
 import { StoryRow } from "../components/StoryRow"
 import { Loader } from "../components/Loader"
 import type { Item } from "../api/types"
@@ -9,12 +9,26 @@ interface Props {
   items: Item[]
   cursor: number
   loading: boolean
+  savedIds?: Set<number>
+  emptyMessage?: string
+  loadingMessage?: string
   onSelect: (idx: number) => void
   onActivate: (idx: number) => void
+  onContextMenu?: (idx: number, ev: MouseEvent) => void
 }
 
 export const StoryListView = forwardRef<ScrollBoxRenderable, Props>(function StoryListView(
-  { items, cursor, loading, onSelect, onActivate },
+  {
+    items,
+    cursor,
+    loading,
+    savedIds,
+    emptyMessage,
+    loadingMessage,
+    onSelect,
+    onActivate,
+    onContextMenu,
+  },
   ref,
 ) {
   const t = useTheme()
@@ -30,10 +44,10 @@ export const StoryListView = forwardRef<ScrollBoxRenderable, Props>(function Sto
         {loading ? (
           <>
             <Loader />
-            <text fg={t.statusHint}>Loading stories…</text>
+            <text fg={t.statusHint}>{loadingMessage ?? "Loading stories…"}</text>
           </>
         ) : (
-          <text fg={t.statusHint}>No stories</text>
+          <text fg={t.statusHint}>{emptyMessage ?? "No stories"}</text>
         )}
       </box>
     )
@@ -55,8 +69,10 @@ export const StoryListView = forwardRef<ScrollBoxRenderable, Props>(function Sto
           rank={idx + 1}
           item={item}
           selected={idx === cursor}
+          saved={savedIds?.has(item.id)}
           onSelect={() => onSelect(idx)}
           onActivate={() => onActivate(idx)}
+          onContextMenu={(ev) => onContextMenu?.(idx, ev)}
         />
       ))}
     </scrollbox>

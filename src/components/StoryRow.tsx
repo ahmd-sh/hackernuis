@@ -1,3 +1,4 @@
+import type { MouseEvent } from "@opentui/core"
 import { TextAttributes } from "@opentui/core"
 import type { Item } from "../api/types"
 import { hostname, relativeTime } from "../utils/format"
@@ -7,11 +8,13 @@ interface Props {
   rank: number
   item: Item
   selected: boolean
+  saved?: boolean
   onSelect: () => void
   onActivate: () => void
+  onContextMenu?: (ev: MouseEvent) => void
 }
 
-export function StoryRow({ rank, item, selected, onSelect, onActivate }: Props) {
+export function StoryRow({ rank, item, selected, saved, onSelect, onActivate, onContextMenu }: Props) {
   const t = useTheme()
   const host = hostname(item.url)
   const title = item.title ?? "(untitled)"
@@ -24,7 +27,12 @@ export function StoryRow({ rank, item, selected, onSelect, onActivate }: Props) 
   const rankFg = selected ? t.accent : t.textDim
 
   let lastClick = 0
-  const handleClick = () => {
+  const handleClick = (ev: MouseEvent) => {
+    if (ev.button === 2) {
+      onSelect()
+      onContextMenu?.(ev)
+      return
+    }
     const now = Date.now()
     if (selected || now - lastClick < 400) {
       onActivate()
@@ -45,6 +53,7 @@ export function StoryRow({ rank, item, selected, onSelect, onActivate }: Props) 
     >
       <text>
         <span fg={rankFg}>{`${String(rank).padStart(3, " ")}. `}</span>
+        {saved ? <span fg={t.accent}>{"★ "}</span> : null}
         <span fg={titleFg} attributes={selected ? TextAttributes.BOLD : TextAttributes.NONE}>
           {title}
         </span>
